@@ -12,8 +12,7 @@ client = AzureOpenAI(
 )
 
 messages = [
-	{"role": "system", "content": "Response to everything as a short poem"},
-	{"role": "user","content": "Find me current price of ethereum in Euro"}
+	{"role": "system", "content": "Response to everything as a short poem"}
 
 ]
 
@@ -54,46 +53,51 @@ functions = [
 
 
 
-response = client.chat.completions.create(
-	model = "GPT-4",
-	messages = messages,
-	tools = functions,
-	tool_choice = "auto"
-)
-
-response_message = response.choices[0].message
-
-gpt_tools = response.choices[0].message.tool_calls
-
-if gpt_tools:
-
-	available_functions = {
-		"get_crypto_price": crypto_price
-	}
-
-	messages.append(response_message)
-	for gpt_tool in gpt_tools:
-		function_name = gpt_tool.function.name
-		function_to_call = available_functions[function_name]
-		function_parameters = json.loads(gpt_tool.function.arguments)
-		function_response = function_to_call(function_parameters.get('crypto_name'), function_parameters.get('fiat_currency'))
-		messages.append(
-			{
-				"tool_call_id": gpt_tool.id,
-				"role": "tool",
-				"name": function_name,
-				"content": function_response
-			}
-		)
-		second_response = client.chat.completions.create(
-			model = "GPT-4",
-			messages=messages
-		)
-		print(second_response.choices[0].message.content)
 
 
+def ask_question(user_question):
+	messages.append({"role": "user", "content": user_question})
+
+	response = client.chat.completions.create(
+		model = "GPT-4",
+		messages = messages,
+		tools = functions,
+		tool_choice = "auto"
+	)
+
+	response_message = response.choices[0].message
+
+	gpt_tools = response.choices[0].message.tool_calls
+
+	if gpt_tools:
+
+		available_functions = {
+			"get_crypto_price": crypto_price
+		}
+
+		messages.append(response_message)
+		for gpt_tool in gpt_tools:
+			function_name = gpt_tool.function.name
+			function_to_call = available_functions[function_name]
+			function_parameters = json.loads(gpt_tool.function.arguments)
+			function_response = function_to_call(function_parameters.get('crypto_name'), function_parameters.get('fiat_currency'))
+			messages.append(
+				{
+					"tool_call_id": gpt_tool.id,
+					"role": "tool",
+					"name": function_name,
+					"content": function_response
+				}
+			)
+			second_response = client.chat.completions.create(
+				model = "GPT-4",
+				messages=messages
+			)
+			return second_response.choices[0].message.content
 
 
 
-else:
-	print(response.choices[0].message.content)
+	else:
+		return response.choices[0].message.content
+
+	

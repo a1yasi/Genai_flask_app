@@ -1,25 +1,20 @@
-rom flask import Flask, render_template, request
-from kat_spotify import get_songs
+from flask import Flask, render_template, request
+from crypto_bot import ask_question
+ 
 
-# app is a variable representing 
-# our flask app
-# __name__ is a python reserved 
-# word
-# telling Flask where our code
-# lives
+
 app = Flask(__name__)
 
-default_year = '1999'
+
 
 # set up our landing page
 @app.route('/')
 def index():
-	my_songs = get_songs(default_year)
-	return render_template('index.html', songs=my_songs, year=default_year)
+	return render_template('index.html', question="type question here!", chatbot_response= "")
 
-# only use this when posting data!
+
 @app.route('/', methods=['POST'])
 def index_post():
-	user_year = request.form['req_year']
-	my_songs = get_songs(user_year)
-	return render_template('index.html', songs=my_songs, year=user_year)
+	user_question = request.form['req_question']
+	chatbot_response = ask_question(user_question)
+	return render_template('index.html', question = user_question, chatbot_response=chatbot_response)
